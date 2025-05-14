@@ -1,3 +1,8 @@
+def generate_greetings(name: str, repeat: int, upper: bool = False) -> list[str]:
+        if upper:
+            name = name.upper()
+        return [f"こんにちは, {name}さん！" for _ in range(repeat)]
+    
 import typer
 import os
 import yaml
@@ -17,7 +22,7 @@ def register(app: typer.Typer):
         
     @app.command(help="あなたの名前を指定して挨拶します。")
     def greet(
-        name :str = typer.Option(None, "--name", "-n", help="あなたの名前"),
+        name :str = typer.Option(..., "--name", "-n", help="あなたの名前"),
         upper : bool = typer.Option(False, "--upper", "-u", help="大文字で表示"),
         repeat : int = typer.Option(1, "--repeat", "-r", help="繰り返し回数"),
         use_config : bool = typer.Option(False, "--use-config", help="config.yamlを使用")
@@ -46,5 +51,5 @@ def register(app: typer.Typer):
         if upper:
             name = name.upper()
         
-        for _ in range(repeat):
-            print(f"こんにちは, {name}さん！")
+        for msg in generate_greetings(name, repeat, upper):
+            typer.echo(msg)

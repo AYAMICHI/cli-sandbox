@@ -1,4 +1,6 @@
 import typer
+import json
+from pathlib import Path
 
 def register(app: typer.Typer):
     @app.command(help="保存した挨拶メッセージを表示します")
@@ -17,3 +19,13 @@ def register(app: typer.Typer):
             typer.secho(f"❌ ファイルが見つかりません: {file}", fg="red")
         except Exception as e:
             typer.echo(f"エラーが発生しました: {e}")
+            
+def load_greetings(file: str = "greetings.json") -> list[str] | None:
+    path = Path(file)
+    if not path.exists():
+        return None
+
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+            
+    return data.get("messages", [])

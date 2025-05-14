@@ -1,4 +1,6 @@
 import typer
+import json
+from pathlib import Path
 from datetime import datetime
 
 
@@ -14,3 +16,11 @@ def register(app: typer.Typer):
         with open(file, "a", encoding="utf-8") as f:
             f.write(lof_line + "\n")
         typer.echo(f"✅ 保存完了: {file}")
+        
+def save_greetings(name: str, messages: list[str], file: str = "greetings.json"):
+    data = {
+        "name": name,
+        "messages": messages
+    }
+    with open(file, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)

@@ -29,7 +29,7 @@ Python + Typer + FastAPI で構築した、学習兼ツール開発用の CLI & 
 ### 1. リポジトリのクローン
 
 ```bash
-git clone https://github.com/あなたのユーザー名/cli-sandbox.git
+git clone https://github.com/AYAMICHI/cli-sandbox.git
 cd cli-sandbox
 ```
 
@@ -117,6 +117,13 @@ cli-sandbox/
 ```
 
 ---
+
+## 📦 ダウンロード
+
+[▶ 最新バージョンをダウンロード](https://github.com/AYAMICHI/cli-sandbox/releases)
+
+- Windows用の `.exe` ファイル（Python不要で実行可能）
+
 
 ## 📝 ライセンス
 
