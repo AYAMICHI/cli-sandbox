@@ -3,9 +3,11 @@ from src.cli_sandbox.commands.greet import generate_greetings
 from src.cli_sandbox.commands.save import save_greetings
 from src.cli_sandbox.commands.load import load_greetings
 from src.cli_sandbox.commands.log import save_log
-from src.cli_sandbox.commands.log import load_logs
-from src.cli_sandbox.commands.log import convert_logs_to_csv
-from src.cli_sandbox.commands.log import upload_logs_to_google_sheets
+from src.cli_sandbox.commands.log import (
+    load_logs,
+    convert_logs_to_csv,
+    upload_logs_to_google_sheets,
+)
 from src.cli_sandbox.version import __version__
 import os
 from dotenv import load_dotenv
@@ -105,13 +107,23 @@ with tab3:
         st.info("📭 CSVファイルがまだありません。")
     
     # Google Sheetsアップロードボタン
-    if st.button("☁️ Google Sheetsにアップロード"):
-        success = upload_logs_to_google_sheets()
-        if success:
-            st.success("✅ Google Sheetsにアップロードしました。")
-        else:
-            st.error("❌ アップロードに失敗しました。usage_log.jsonが存在するか確認してください。")
-        
+    json_files = glob.glob("*.json")
+    
+    if json_files:
+        selected_file = st.selectbox("☁️ アップロードするログファイルを選んでください", json_files)
+    
+        if st.button("☁️ Google Sheetsにアップロード"):
+            try:
+                # Google Sheetsにアップロード
+                success = upload_logs_to_google_sheets(json_file=selected_file)
+                if success:
+                    st.success("✅ Google Sheetsにアップロードしました。")
+                else:
+                    st.error("❌ アップロードに失敗しました。usage_log.jsonが存在するか確認してください。")
+            except FileNotFoundError:
+                st.error("❌ ファイルが存在しません。")
+    else:
+        st.info("📭 アップロード可能なファイルが存在しません。")
         
 # * ダウンロードセクション
 st.header("📥 JSONファイルをダウンロード")
