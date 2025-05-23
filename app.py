@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 from src.cli_sandbox.commands.greet import generate_greetings
 from src.cli_sandbox.commands.save import save_greetings
@@ -7,12 +8,14 @@ from src.cli_sandbox.commands.log import (
     load_logs,
     convert_logs_to_csv,
     upload_logs_to_google_sheets,
+    convert_logs_to_dataframe
 )
 from src.cli_sandbox.version import __version__
 import os
 from dotenv import load_dotenv
 from pathlib import Path
 import glob
+import altair as alt
 
 
 load_dotenv()  # .envファイルを読み込む
@@ -79,20 +82,32 @@ with tab2:
 
 # --- タブ3 : 使用履歴表示 ---
 with tab3:
-    st.markdown("### 📊 使用履歴表示")
-    st.markdown("---")
-    if st.button("📂 ログを表示"):
+    st.markdown("### 🔍 ログを絞り込んで表示")
+    filter_name = st.text_input("名前でフィルター（空欄で全件表示）", value="")
+    filter_date = st.text_input("日付でフィルター(例: 2025-05-18)", value="")
+    
+    if st.button("🔍 フィルターを検索"):
         logs = load_logs()
         if logs:
-            st.success(f"🔎 過去のログ {len(logs)} 件を表示中")
-            for log in logs[::-1]:  # 最新のログから表示
-                st.write(f"🕒 {log['timestamp']} | 🔁 {log['repeat']}")
-                for msg in log["messages"]:
-                    st.markdown(f"- {msg}")
-                st.markdown("---")
+            filtered_logs = []
+            for log in logs:
+                name_match = filter_name in log["name"] if filter_name else True
+                date_match = filter_date in log["timestamp"] if filter_date else True
+                if name_match and date_match:
+                    filtered_logs.append(log)
+                    
+            st.success(f"🔎 該当ログ: {len(filtered_logs)} 件")
+            
+            if filtered_logs:
+                for log in filtered_logs[::-1]:  # 最新のログから表示
+                    st.write(f"🕒 {log['timestamp']} | 🙋‍♂️ {log['name']} | 🔁 {log['repeat']}")
+                    for msg in log["messages"]:
+                        st.markdown(f"- {msg}")
+                    st.markdown("---")    
+            else:
+                st.info("❌ 該当するログはありません。")
         else:
-            st.info("📭 ログファイルがまだありません。")
-    
+            st.info("📭 ログがまだありません。")
     # CSVダウンロードボタン
     df = convert_logs_to_csv()
     if not df.empty:
@@ -125,6 +140,44 @@ with tab3:
     else:
         st.info("📭 アップロード可能なファイルが存在しません。")
         
+st.markdown("### 名前ごとの累計挨拶回数グラフ")
+
+df = convert_logs_to_dataframe()
+if not df.empty:
+    # 日付だけに変換
+    df["date"] = pd.to_datetime(df["timestamp"]).dt.date
+    
+    # 各日付ごとの回数を合計
+    daily_counts = df.groupby(["date", "name"])["repeat"].sum().reset_index()
+    
+    # Altair 折れ線グラフ
+    chart = alt.Chart(daily_counts).mark_line(point=True).encode(
+        x=alt.X('date:T', title="日付"),
+        y=alt.Y('repeat:Q', title="挨拶回数"),
+        tooltip=['date', 'repeat']
+    ).properties(
+        width=600,
+        height=300,
+        title="日付ごとの挨拶回数推移"
+    )
+    st.altair_chart(chart, use_container_width=True)
+    
+    # name_counts = df.groupby("name")["repeat"].sum().reset_index()
+    # # グラフの作成
+    # chart = alt.Chart(name_counts).mark_bar().encode(
+    #     x=alt.X('repeat:Q', title="挨拶回数"),
+    #     y=alt.Y('name:N', sort='-x', title="名前"),
+    #     tooltip=['name', 'repeat']
+    # ).properties(
+    #     width=500,
+    #     height=300,
+    #     title="名前と別の累計挨拶回数"
+    # )
+    
+    # st.altair_chart(chart, use_container_width=True)
+else:
+    st.info("📭 表示できるログがまだありません。")
+    
 # * ダウンロードセクション
 st.header("📥 JSONファイルをダウンロード")
 # JSONファイル一覧

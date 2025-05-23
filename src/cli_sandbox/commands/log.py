@@ -101,4 +101,26 @@ def upload_logs_to_google_sheets(
                 log["repeat"],
                 msg])
     return True    
-        
+
+def convert_logs_to_dataframe(json_file="usage_log.json") -> pd.DataFrame:
+    path = Path(json_file)
+    if not path.exists():
+        return pd.DataFrame()
+    
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            logs = json.load(f)
+        except json.JSONDecodeError:
+            return pd.DataFrame()
+    
+    # フラットなDataFrameに変換
+    records = []
+    for log in logs:
+        for msg in log["messages"]:
+            records.append({
+                "timestamp": log["timestamp"],
+                "name": log["name"],
+                "repeat": log["repeat"],
+                "message": msg
+            })
+    return pd.DataFrame(records)
